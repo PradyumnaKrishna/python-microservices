@@ -1,0 +1,61 @@
+version: '3.9'
+services:
+  admin:
+    extends: 
+      file: admin/docker-compose.yml
+      service: backend
+    depends_on: 
+      - db
+      - mq
+
+  admin_queue:
+    extends: 
+      file: admin/docker-compose.yml
+      service: queue
+    depends_on: 
+      - db
+      - mq
+
+  main:
+    extends: 
+      file: main/docker-compose.yml
+      service: backend
+    depends_on: 
+      - db
+      - mq
+
+  main_queue:
+    extends: 
+      file: main/docker-compose.yml
+      service: queue
+    depends_on: 
+      - db
+      - mq
+
+  db:
+    image: biarms/mysql:5.7.33-beta-circleci
+    restart: always
+    environment: 
+      MYSQL_DATABASE: admin
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    volumes: 
+      - .dbdata:/var/lib/mysql
+    ports: 
+      - 33066:3306
+
+  mq:
+    image: rabbitmq:3-management
+    hostname: my-rabbit
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - .rabbitmq/data/:/var/lib/rabbitmq/
+        - .rabbitmq/log/:/var/log/rabbitmq
+
+networks: 
+  default: 
+    external: 
+      name: microservices_default
